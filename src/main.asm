@@ -163,7 +163,11 @@ addSubst:
     mov rsi, qword [pVar1]
     xor ecx, ecx
 
-
+    lea rdx, .msg
+    mov eax, 0900h
+    int 21h
+    int 20h
+.msg: db "UNIMPLEMENTED EXCEPTION$"
 
 printSubst:
     call enterDOSCrit   ;Ensure the CDS size and ptr doesnt change

@@ -713,7 +713,7 @@
     10 00000010 CD21                <1>     int 21h
     11 00000012 3A05EAFFFFFF        <1>     cmp al, byte [.vNum]    ;Version number 1 check
     12 00000018 7615                <1>     jbe short okVersion
-    13 0000001A 488D1584020000      <1>     lea rdx, badVerStr
+    13 0000001A 488D15AC020000      <1>     lea rdx, badVerStr
     14                              <1> badPrintExit:
     15 00000021 B800090000          <1>     mov eax, 0900h
     16 00000026 CD21                <1>     int 21h
@@ -737,26 +737,26 @@
     34 00000059 31C0                <1>     xor eax, eax    ;Clear all upper bytes for fun
     35 0000005B 488905(08000000)    <1>     mov qword [pVar1], rax  ;Init these vars
     36 00000062 488905(10000000)    <1>     mov qword [pVar2], rax
-    37 00000069 E808020000          <1>     call skipDelims ;Goto the first non-delimiter char
+    37 00000069 E830020000          <1>     call skipDelims ;Goto the first non-delimiter char
     38 0000006E 3C0D                <1>     cmp al, CR
     39 00000070 7435                <1>     je endParse
     40 00000072 488935(08000000)    <1>     mov qword [pVar1], rsi    ;Save the ptr to the first var
     41 00000079 FFC1                <1>     inc ecx
-    42 0000007B E802020000          <1>     call findDelimOrCR
+    42 0000007B E82A020000          <1>     call findDelimOrCR
     43 00000080 3C0D                <1>     cmp al, CR
     44 00000082 7423                <1>     je endParse
-    45 00000084 E8ED010000          <1>     call skipDelims
+    45 00000084 E815020000          <1>     call skipDelims
     46 00000089 488935(10000000)    <1>     mov qword [pVar2], rsi    ;Save the ptr to the second var
     47 00000090 FFC1                <1>     inc ecx
-    48 00000092 E8EB010000          <1>     call findDelimOrCR
+    48 00000092 E813020000          <1>     call findDelimOrCR
     49 00000097 3C0D                <1>     cmp al, CR  ;The second arg shouldve been the last arg
     50 00000099 740C                <1>     je endParse
     51                              <1> badParmExit:
-    52 0000009B 488D1519020000      <1>     lea rdx, badParmStr
+    52 0000009B 488D1541020000      <1>     lea rdx, badParmStr
     53 000000A2 E97AFFFFFF          <1>     jmp badPrintExit
     54                              <1> endParse:
     55 000000A7 85C9                <1>     test ecx, ecx
-    56 000000A9 0F8425010000        <1>     jz printSubst   ;If no arguments found, print the substs!
+    56 000000A9 0F844D010000        <1>     jz printSubst   ;If no arguments found, print the substs!
     57 000000AF 81F901000000        <1>     cmp ecx, 1      
     58 000000B5 74E4                <1>     je badParmExit  ;Cannot have just 1 argument on the cmdline
     59 000000B7 B800370000          <1>     mov eax, 3700h  ;Get switchchar in dl
@@ -765,7 +765,7 @@
     62 000000C0 488B35(08000000)    <1>     mov rsi, qword [pVar1]
     63 000000C7 3816                <1>     cmp byte [rsi], dl
     64 000000C9 7509                <1>     jne .g2
-    65 000000CB E871010000          <1>     call checkSwitchOk  ;Now check rsi points to a bona fide /D 
+    65 000000CB E899010000          <1>     call checkSwitchOk  ;Now check rsi points to a bona fide /D 
     66 000000D0 72C9                <1>     jc badParmExit
     67 000000D2 FFC1                <1>     inc ecx
     68                              <1> .g2:
@@ -774,7 +774,7 @@
     71 000000DD 7510                <1>     jne .switchDone
     72 000000DF 85C9                <1>     test ecx, ecx   ;Var2 can be /D ONLY IF Var1 was not /D
     73 000000E1 75B8                <1>     jnz badParmExit
-    74 000000E3 E859010000          <1>     call checkSwitchOk  ;Now check rsi points to a bona fide /D 
+    74 000000E3 E881010000          <1>     call checkSwitchOk  ;Now check rsi points to a bona fide /D 
     75 000000E8 72B1                <1>     jc badParmExit
     76 000000EA B902000000          <1>     mov ecx, 2      ;Else, indicate var2 has the /D flag!
     77                              <1> .switchDone:
@@ -788,7 +788,7 @@
     85 0000010B 480F45FE            <1>     cmovne rdi, rsi     ;Make rdi point to the drive letter!
     86                              <1> ;rdi points to the drive letter in cmdline. Check it is legit.
     87 0000010F 8A4702              <1>     mov al, byte [rdi + 2]
-    88 00000112 E87B010000          <1>     call isALDelim
+    88 00000112 E8A3010000          <1>     call isALDelim
     89 00000117 7582                <1>     jne badParmExit
     90 00000119 807F013A            <1>     cmp byte [rdi + 1], ":"
     91 0000011D 0F8578FFFFFF        <1>     jne badParmExit
@@ -808,7 +808,7 @@
    105 00000141 0F8454FFFFFF        <1>     je badParmExit
    106                              <1> ;Check if the subst drive we want to deactivate is a valid drive
    107                              <1> ; in our system (i.e. does such a drive entry exist in the CDS array)
-   108 00000147 E816010000          <1>     call enterDOSCrit   ;Enter crit, Exit in the exit routine!
+   108 00000147 E83E010000          <1>     call enterDOSCrit   ;Enter crit, Exit in the exit routine!
    109 0000014C 488B1D(00000000)    <1>     mov rbx, qword [pSysvars]   
    110 00000153 0FB6433D            <1>     movzx eax, byte [rbx + sysVars.lastdrvNum]
    111 00000157 38C1                <1>     cmp cl, al  ;If drive specified is past end of CDS array, error!
@@ -846,14 +846,14 @@
    143 000001A7 4881FDFFFFFFFF      <1>     cmp rbp, -1 ;We should never fall through but still better to be safe!
    144 000001AE 75EE                <1>     jne .lp
    145                              <1> .exit:
-   146 000001B0 E980000000          <1>     jmp exit
+   146 000001B0 E9A8000000          <1>     jmp exit
    147                              <1> .dpbFnd:
    148 000001B5 48896F45            <1>     mov qword [rdi + cds.qDPBPtr], rbp  ;Set this DPB as the CDS DPB!
    149 000001B9 66814F430040        <1>     or word [rdi + cds.wFlags], cdsValidDrive   ;Reactivate this drive!
    150 000001BF EBEF                <1>     jmp short .exit
    151                              <1> .error:
    152                              <1> ;Invalid drive specified!
-   153 000001C1 E8A6000000          <1>     call exitDOSCrit    ;Exit the critical section before exiting!!
+   153 000001C1 E8CE000000          <1>     call exitDOSCrit    ;Exit the critical section before exiting!!
    154 000001C6 E9D0FEFFFF          <1>     jmp badParmExit
    155                              <1>     
    156                              <1> addSubst:
@@ -866,63 +866,69 @@
    163 000001CB 488B35(08000000)    <1>     mov rsi, qword [pVar1]
    164 000001D2 31C9                <1>     xor ecx, ecx
    165                              <1> 
-   166                              <1> 
-   167                              <1> 
-   168                              <1> printSubst:
-   169 000001D4 E889000000          <1>     call enterDOSCrit   ;Ensure the CDS size and ptr doesnt change
-   170 000001D9 488B1D(00000000)    <1>     mov rbx, qword [pSysvars]
-   171 000001E0 488D7B2A            <1>     lea rdi, qword [rbx + sysVars.cdsHeadPtr]
-   172 000001E4 0FB64B3D            <1>     movzx ecx, byte [rbx + sysVars.lastdrvNum]  ;Get # of CDS's
-   173 000001E8 BB41000000          <1>     mov ebx, "A"    
-   174                              <1> .lp:
-   175 000001ED 66F747430010        <1>     test word [rdi + cds.wFlags], cdsSubstDrive
-   176 000001F3 7433                <1>     jz .gotoNextCDS
-   177                              <1> ;Print the CDS drive letter and the rocket
-   178 000001F5 488D15E0000000      <1>     lea rdx, substStr
-   179 000001FC 881A                <1>     mov byte [rdx], bl  ;Overwrite the drive letter in substStr
-   180 000001FE B800090000          <1>     mov eax, 0900h      ;Print the substStr
-   181 00000203 CD21                <1>     int 21h
-   182                              <1> ;Print the current path of the cds upto the backslash offset
-   183 00000205 53                  <1>     push rbx
-   184 00000206 0FB74F5D            <1>     movzx ecx, word [rdi + cds.wBackslashOffset]
-   185 0000020A 488D17              <1>     lea rdx, qword [rdi + cds.sCurrentPath]
-   186 0000020D BB01000000          <1>     mov ebx, 1          ;Print to STDOUT
-   187 00000212 B800400000          <1>     mov eax, 4000h
-   188 00000217 CD21                <1>     int 21h
-   189 00000219 5B                  <1>     pop rbx
-   190                              <1> ;Print a CRLF
-   191 0000021A 488D1597000000      <1>     lea rdx, crlf
-   192 00000221 B800090000          <1>     mov eax, 0900h
-   193 00000226 CD21                <1>     int 21h
-   194                              <1> .gotoNextCDS:
-   195 00000228 4881C75F000000      <1>     add rdi, cds_size
-   196 0000022F FFC3                <1>     inc ebx ;Goto next drive letter!
-   197 00000231 FFC9                <1>     dec ecx
-   198 00000233 75B8                <1>     jnz .lp
-   199                              <1> exit:
-   200 00000235 E832000000          <1>     call exitDOSCrit
-   201 0000023A B8004C0000          <1>     mov eax, 4C00h
-   202 0000023F CD21                <1>     int 21h
-   203                              <1> 
-   204                              <1> ;------------------------------------------------------------------------
-   205                              <1> ; Utility functions below!
-   206                              <1> ;------------------------------------------------------------------------
-   207                              <1> checkSwitchOk:
-   208                              <1> ;Checks if the switch char is D and if the char following is a 
-   209                              <1> ; delimiter or CR. 
-   210                              <1> ;Input: rsi -> Possible /D. Points to the /
-   211                              <1> ;Output: CF=CY: Not ok to proceed.
-   212                              <1> ;        CF=NC: Ok to proceed
-   213 00000241 8A4601              <1>     mov al, byte [rsi + 1]
-   214 00000244 50                  <1>     push rax
-   215 00000245 B813120000          <1>     mov eax, 1213h  ;UC char
-   216 0000024A CD2F                <1>     int 2Fh
-   217 0000024C 3C44                <1>     cmp al, "D"
-   218 0000024E 58                  <1>     pop rax
-   219 0000024F 750F                <1>     jne .bad
-   220 00000251 8A4602              <1>     mov al, byte [rsi + 2]
-   221 00000254 3C0D                <1>     cmp al, CR  ;If equal, clears CF
-   222                              <1>     rete
+   166 000001D4 488D1509000000      <1>     lea rdx, .msg
+   167 000001DB B800090000          <1>     mov eax, 0900h
+   168 000001E0 CD21                <1>     int 21h
+   169 000001E2 CD20                <1>     int 20h
+   170 000001E4 554E494D504C454D45- <1> .msg: db "UNIMPLEMENTED EXCEPTION$"
+   170 000001ED 4E5445442045584345- <1>
+   170 000001F6 5054494F4E24        <1>
+   171                              <1> 
+   172                              <1> printSubst:
+   173 000001FC E889000000          <1>     call enterDOSCrit   ;Ensure the CDS size and ptr doesnt change
+   174 00000201 488B1D(00000000)    <1>     mov rbx, qword [pSysvars]
+   175 00000208 488D7B2A            <1>     lea rdi, qword [rbx + sysVars.cdsHeadPtr]
+   176 0000020C 0FB64B3D            <1>     movzx ecx, byte [rbx + sysVars.lastdrvNum]  ;Get # of CDS's
+   177 00000210 BB41000000          <1>     mov ebx, "A"    
+   178                              <1> .lp:
+   179 00000215 66F747430010        <1>     test word [rdi + cds.wFlags], cdsSubstDrive
+   180 0000021B 7433                <1>     jz .gotoNextCDS
+   181                              <1> ;Print the CDS drive letter and the rocket
+   182 0000021D 488D15E0000000      <1>     lea rdx, substStr
+   183 00000224 881A                <1>     mov byte [rdx], bl  ;Overwrite the drive letter in substStr
+   184 00000226 B800090000          <1>     mov eax, 0900h      ;Print the substStr
+   185 0000022B CD21                <1>     int 21h
+   186                              <1> ;Print the current path of the cds upto the backslash offset
+   187 0000022D 53                  <1>     push rbx
+   188 0000022E 0FB74F5D            <1>     movzx ecx, word [rdi + cds.wBackslashOffset]
+   189 00000232 488D17              <1>     lea rdx, qword [rdi + cds.sCurrentPath]
+   190 00000235 BB01000000          <1>     mov ebx, 1          ;Print to STDOUT
+   191 0000023A B800400000          <1>     mov eax, 4000h
+   192 0000023F CD21                <1>     int 21h
+   193 00000241 5B                  <1>     pop rbx
+   194                              <1> ;Print a CRLF
+   195 00000242 488D1597000000      <1>     lea rdx, crlf
+   196 00000249 B800090000          <1>     mov eax, 0900h
+   197 0000024E CD21                <1>     int 21h
+   198                              <1> .gotoNextCDS:
+   199 00000250 4881C75F000000      <1>     add rdi, cds_size
+   200 00000257 FFC3                <1>     inc ebx ;Goto next drive letter!
+   201 00000259 FFC9                <1>     dec ecx
+   202 0000025B 75B8                <1>     jnz .lp
+   203                              <1> exit:
+   204 0000025D E832000000          <1>     call exitDOSCrit
+   205 00000262 B8004C0000          <1>     mov eax, 4C00h
+   206 00000267 CD21                <1>     int 21h
+   207                              <1> 
+   208                              <1> ;------------------------------------------------------------------------
+   209                              <1> ; Utility functions below!
+   210                              <1> ;------------------------------------------------------------------------
+   211                              <1> checkSwitchOk:
+   212                              <1> ;Checks if the switch char is D and if the char following is a 
+   213                              <1> ; delimiter or CR. 
+   214                              <1> ;Input: rsi -> Possible /D. Points to the /
+   215                              <1> ;Output: CF=CY: Not ok to proceed.
+   216                              <1> ;        CF=NC: Ok to proceed
+   217 00000269 8A4601              <1>     mov al, byte [rsi + 1]
+   218 0000026C 50                  <1>     push rax
+   219 0000026D B813120000          <1>     mov eax, 1213h  ;UC char
+   220 00000272 CD2F                <1>     int 2Fh
+   221 00000274 3C44                <1>     cmp al, "D"
+   222 00000276 58                  <1>     pop rax
+   223 00000277 750F                <1>     jne .bad
+   224 00000279 8A4602              <1>     mov al, byte [rsi + 2]
+   225 0000027C 3C0D                <1>     cmp al, CR  ;If equal, clears CF
+   226                              <1>     rete
     49                              <2> cret e
     19                              <3> %%_base:
     20                              <3> %assign baseVar %%_base-$$
@@ -939,15 +945,15 @@
     31                              <3> %%a:
     32                              <3>  %endif
     33                              <3>  %else
-    34 00000256 7501                <3>  j%-1 short %%a
+    34 0000027E 7501                <3>  j%-1 short %%a
     35                              <3>  return
     13                              <4> %%_ret:
-    14 00000258 C3                  <4>  ret
+    14 00000280 C3                  <4>  ret
     15                              <4> %assign retOff %%_ret-$$
     36                              <3> %%a:
     37                              <3>  %endif
-   223 00000259 E834000000          <1>     call isALDelim  ;If return equal, we are ok!
-   224                              <1>     rete
+   227 00000281 E834000000          <1>     call isALDelim  ;If return equal, we are ok!
+   228                              <1>     rete
     49                              <2> cret e
     19                              <3> %%_base:
     20                              <3> %assign baseVar %%_base-$$
@@ -956,7 +962,7 @@
     23                              <3>  %ifdef currSegVBase
     24                              <3>  j%+1 short (retOff+currSegVBase)
     25                              <3>  %else
-    26 0000025E 74(58)              <3>  j%+1 short retOff
+    26 00000286 74(80)              <3>  j%+1 short retOff
     27                              <3>  %endif
     28                              <3>  %else
     29                              <3>  j%-1 short %%a
@@ -968,105 +974,61 @@
     35                              <3>  return
     36                              <3> %%a:
     37                              <3>  %endif
-   225                              <1> .bad:
-   226 00000260 F9                  <1>     stc
-   227                              <1>     return
+   229                              <1> .bad:
+   230 00000288 F9                  <1>     stc
+   231                              <1>     return
     13                              <2> %%_ret:
-    14 00000261 C3                  <2>  ret
+    14 00000289 C3                  <2>  ret
     15                              <2> %assign retOff %%_ret-$$
-   228                              <1> 
-   229                              <1> enterDOSCrit:
-   230 00000262 50                  <1>     push rax
-   231 00000263 B801800000          <1>     mov eax, 8001h
-   232 00000268 CD2A                <1>     int 2Ah
-   233 0000026A 58                  <1>     pop rax
-   234                              <1>     return 
+   232                              <1> 
+   233                              <1> enterDOSCrit:
+   234 0000028A 50                  <1>     push rax
+   235 0000028B B801800000          <1>     mov eax, 8001h
+   236 00000290 CD2A                <1>     int 2Ah
+   237 00000292 58                  <1>     pop rax
+   238                              <1>     return 
     13                              <2> %%_ret:
-    14 0000026B C3                  <2>  ret
+    14 00000293 C3                  <2>  ret
     15                              <2> %assign retOff %%_ret-$$
-   235                              <1> 
-   236                              <1> exitDOSCrit:
-   237 0000026C 50                  <1>     push rax
-   238 0000026D B801810000          <1>     mov eax, 8101h
-   239 00000272 CD2A                <1>     int 2Ah
-   240 00000274 58                  <1>     pop rax
-   241                              <1>     return 
+   239                              <1> 
+   240                              <1> exitDOSCrit:
+   241 00000294 50                  <1>     push rax
+   242 00000295 B801810000          <1>     mov eax, 8101h
+   243 0000029A CD2A                <1>     int 2Ah
+   244 0000029C 58                  <1>     pop rax
+   245                              <1>     return 
     13                              <2> %%_ret:
-    14 00000275 C3                  <2>  ret
+    14 0000029D C3                  <2>  ret
     15                              <2> %assign retOff %%_ret-$$
-   242                              <1> 
-   243                              <1> skipDelims:
-   244                              <1> ;Points rsi to the first non-delimiter char in a string, loads al with value
-   245 00000276 AC                  <1>     lodsb
-   246 00000277 E816000000          <1>     call isALDelim
-   247 0000027C 74F8                <1>     jz skipDelims
-   248                              <1> ;Else, point rsi back to that char :)
-   249 0000027E 48FFCE              <1>     dec rsi
-   250                              <1>     return
+   246                              <1> 
+   247                              <1> skipDelims:
+   248                              <1> ;Points rsi to the first non-delimiter char in a string, loads al with value
+   249 0000029E AC                  <1>     lodsb
+   250 0000029F E816000000          <1>     call isALDelim
+   251 000002A4 74F8                <1>     jz skipDelims
+   252                              <1> ;Else, point rsi back to that char :)
+   253 000002A6 48FFCE              <1>     dec rsi
+   254                              <1>     return
     13                              <2> %%_ret:
-    14 00000281 C3                  <2>  ret
+    14 000002A9 C3                  <2>  ret
     15                              <2> %assign retOff %%_ret-$$
-   251                              <1> 
-   252                              <1> findDelimOrCR:
-   253                              <1> ;Point rsi to the first delim or cmdtail terminator
-   254 00000282 AC                  <1>     lodsb
-   255 00000283 3C0D                <1>     cmp al, CR
-   256 00000285 7407                <1>     je .exit
-   257 00000287 E806000000          <1>     call isALDelim
-   258 0000028C 75F4                <1>     jnz findDelimOrCR
-   259                              <1> .exit:
-   260 0000028E 48FFCE              <1>     dec rsi
-   261                              <1>     return
+   255                              <1> 
+   256                              <1> findDelimOrCR:
+   257                              <1> ;Point rsi to the first delim or cmdtail terminator
+   258 000002AA AC                  <1>     lodsb
+   259 000002AB 3C0D                <1>     cmp al, CR
+   260 000002AD 7407                <1>     je .exit
+   261 000002AF E806000000          <1>     call isALDelim
+   262 000002B4 75F4                <1>     jnz findDelimOrCR
+   263                              <1> .exit:
+   264 000002B6 48FFCE              <1>     dec rsi
+   265                              <1>     return
     13                              <2> %%_ret:
-    14 00000291 C3                  <2>  ret
+    14 000002B9 C3                  <2>  ret
     15                              <2> %assign retOff %%_ret-$$
-   262                              <1> 
-   263                              <1> isALDelim:
-   264 00000292 3C20                <1>     cmp al, SPC
-   265                              <1>     rete
-    49                              <2> cret e
-    19                              <3> %%_base:
-    20                              <3> %assign baseVar %%_base-$$
-    21                              <3>  %ifdef retOff
-    22                              <3>  %if (baseVar - retOff <= 126) && (baseVar > retOff)
-    23                              <3>  %ifdef currSegVBase
-    24                              <3>  j%+1 short (retOff+currSegVBase)
-    25                              <3>  %else
-    26 00000294 74(91)              <3>  j%+1 short retOff
-    27                              <3>  %endif
-    28                              <3>  %else
-    29                              <3>  j%-1 short %%a
-    30                              <3>  return
-    31                              <3> %%a:
-    32                              <3>  %endif
-    33                              <3>  %else
-    34                              <3>  j%-1 short %%a
-    35                              <3>  return
-    36                              <3> %%a:
-    37                              <3>  %endif
-   266 00000296 3C09                <1>     cmp al, TAB
-   267                              <1>     rete
-    49                              <2> cret e
-    19                              <3> %%_base:
-    20                              <3> %assign baseVar %%_base-$$
-    21                              <3>  %ifdef retOff
-    22                              <3>  %if (baseVar - retOff <= 126) && (baseVar > retOff)
-    23                              <3>  %ifdef currSegVBase
-    24                              <3>  j%+1 short (retOff+currSegVBase)
-    25                              <3>  %else
-    26 00000298 74(91)              <3>  j%+1 short retOff
-    27                              <3>  %endif
-    28                              <3>  %else
-    29                              <3>  j%-1 short %%a
-    30                              <3>  return
-    31                              <3> %%a:
-    32                              <3>  %endif
-    33                              <3>  %else
-    34                              <3>  j%-1 short %%a
-    35                              <3>  return
-    36                              <3> %%a:
-    37                              <3>  %endif
-   268 0000029A 3C3D                <1>     cmp al, "="
+   266                              <1> 
+   267                              <1> isALDelim:
+   268 000002BA 3C20                <1>     cmp al, SPC
    269                              <1>     rete
     49                              <2> cret e
     19                              <3> %%_base:
@@ -1076,7 +1038,7 @@
     23                              <3>  %ifdef currSegVBase
     24                              <3>  j%+1 short (retOff+currSegVBase)
     25                              <3>  %else
-    26 0000029C 74(91)              <3>  j%+1 short retOff
+    26 000002BC 74(B9)              <3>  j%+1 short retOff
     27                              <3>  %endif
     28                              <3>  %else
     29                              <3>  j%-1 short %%a
@@ -1088,7 +1050,7 @@
     35                              <3>  return
     36                              <3> %%a:
     37                              <3>  %endif
-   270 0000029E 3C2C                <1>     cmp al, ","
+   270 000002BE 3C09                <1>     cmp al, TAB
    271                              <1>     rete
     49                              <2> cret e
     19                              <3> %%_base:
@@ -1098,7 +1060,7 @@
     23                              <3>  %ifdef currSegVBase
     24                              <3>  j%+1 short (retOff+currSegVBase)
     25                              <3>  %else
-    26 000002A0 74(91)              <3>  j%+1 short retOff
+    26 000002C0 74(B9)              <3>  j%+1 short retOff
     27                              <3>  %endif
     28                              <3>  %else
     29                              <3>  j%-1 short %%a
@@ -1110,24 +1072,68 @@
     35                              <3>  return
     36                              <3> %%a:
     37                              <3>  %endif
-   272 000002A2 3C3B                <1>     cmp al, ";"
-   273                              <1>     return
+   272 000002C2 3C3D                <1>     cmp al, "="
+   273                              <1>     rete
+    49                              <2> cret e
+    19                              <3> %%_base:
+    20                              <3> %assign baseVar %%_base-$$
+    21                              <3>  %ifdef retOff
+    22                              <3>  %if (baseVar - retOff <= 126) && (baseVar > retOff)
+    23                              <3>  %ifdef currSegVBase
+    24                              <3>  j%+1 short (retOff+currSegVBase)
+    25                              <3>  %else
+    26 000002C4 74(B9)              <3>  j%+1 short retOff
+    27                              <3>  %endif
+    28                              <3>  %else
+    29                              <3>  j%-1 short %%a
+    30                              <3>  return
+    31                              <3> %%a:
+    32                              <3>  %endif
+    33                              <3>  %else
+    34                              <3>  j%-1 short %%a
+    35                              <3>  return
+    36                              <3> %%a:
+    37                              <3>  %endif
+   274 000002C6 3C2C                <1>     cmp al, ","
+   275                              <1>     rete
+    49                              <2> cret e
+    19                              <3> %%_base:
+    20                              <3> %assign baseVar %%_base-$$
+    21                              <3>  %ifdef retOff
+    22                              <3>  %if (baseVar - retOff <= 126) && (baseVar > retOff)
+    23                              <3>  %ifdef currSegVBase
+    24                              <3>  j%+1 short (retOff+currSegVBase)
+    25                              <3>  %else
+    26 000002C8 74(B9)              <3>  j%+1 short retOff
+    27                              <3>  %endif
+    28                              <3>  %else
+    29                              <3>  j%-1 short %%a
+    30                              <3>  return
+    31                              <3> %%a:
+    32                              <3>  %endif
+    33                              <3>  %else
+    34                              <3>  j%-1 short %%a
+    35                              <3>  return
+    36                              <3> %%a:
+    37                              <3>  %endif
+   276 000002CA 3C3B                <1>     cmp al, ";"
+   277                              <1>     return
     13                              <2> %%_ret:
-    14 000002A4 C3                  <2>  ret
+    14 000002CC C3                  <2>  ret
     15                              <2> %assign retOff %%_ret-$$
     20                                  %include "./dat/strings.asm"
      1                              <1> 
      2                              <1> ;SUBST data
      3                              <1> ;Strings
-     4 000002A5 496E76616C69642044- <1> badVerStr   db "Invalid DOS Version"    ;Ends on the next line
-     4 000002AE 4F532056657273696F- <1>
-     4 000002B7 6E                  <1>
-     5 000002B8 0A0D24              <1> crlf        db LF,CR,"$"
-     6 000002BB 496E636F7272656374- <1> badParmStr  db "Incorrect number of parameters",CR,LF,"$"
-     6 000002C4 206E756D626572206F- <1>
-     6 000002CD 6620706172616D6574- <1>
-     6 000002D6 6572730D0A24        <1>
-     7 000002DC 5F3A203D3E2024      <1> substStr    db "_: => $"
+     4 000002CD 496E76616C69642044- <1> badVerStr   db "Invalid DOS Version"    ;Ends on the next line
+     4 000002D6 4F532056657273696F- <1>
+     4 000002DF 6E                  <1>
+     5 000002E0 0A0D24              <1> crlf        db LF,CR,"$"
+     6 000002E3 496E636F7272656374- <1> badParmStr  db "Incorrect number of parameters",CR,LF,"$"
+     6 000002EC 206E756D626572206F- <1>
+     6 000002F5 6620706172616D6574- <1>
+     6 000002FE 6572730D0A24        <1>
+     7 00000304 5F3A203D3E2024      <1> substStr    db "_: => $"
     21                                  ;Use a 45 QWORD stack
     22                                  Segment transient align=8 follows=.text nobits
     23                                  %include "./dat/bss.asm"

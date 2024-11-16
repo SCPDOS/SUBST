@@ -11,15 +11,15 @@ Output file:  ./bin/SUBST.COM
 -- Sections (summary) ---------------------------------------------------------
 
 Vstart            Start             Stop              Length    Class     Name
-               0                 0               2E3  000002E3  progbits  .text
-             2E8               2E8               468  00000180  nobits    transient
+               0                 0               30B  0000030B  progbits  .text
+             310               310               490  00000180  nobits    transient
 
 -- Sections (detailed) --------------------------------------------------------
 
 ---- Section .text ------------------------------------------------------------
 
 class:     progbits
-length:                 2E3
+length:                 30B
 start:                    0
 align:     not defined
 follows:   not defined
@@ -31,10 +31,10 @@ vfollows:  not defined
 
 class:     nobits
 length:                 180
-start:                  2E8
+start:                  310
 align:                    8
 follows:   not defined
-vstart:                 2E8
+vstart:                 310
 valign:                   8
 vfollows:  .text
 
@@ -461,42 +461,43 @@ Real              Virtual           Name
              1B5               1B5  delSubst.dpbFnd
              1C1               1C1  delSubst.error
              1CB               1CB  addSubst
-             1D4               1D4  printSubst
-             1ED               1ED  printSubst.lp
-             228               228  printSubst.gotoNextCDS
-             235               235  exit
-             241               241  checkSwitchOk
-             256               256  ..@50._base
-             258               258  ..@51._ret
-             259               259  ..@50.a
-             25E               25E  ..@53._base
-             260               260  checkSwitchOk.bad
-             261               261  ..@54._ret
-             262               262  enterDOSCrit
-             26B               26B  ..@55._ret
-             26C               26C  exitDOSCrit
-             275               275  ..@56._ret
-             276               276  skipDelims
-             281               281  ..@57._ret
-             282               282  findDelimOrCR
-             28E               28E  findDelimOrCR.exit
-             291               291  ..@58._ret
-             292               292  isALDelim
-             294               294  ..@60._base
-             298               298  ..@62._base
-             29C               29C  ..@64._base
-             2A0               2A0  ..@66._base
-             2A4               2A4  ..@67._ret
-             2A5               2A5  badVerStr
-             2B8               2B8  crlf
-             2BB               2BB  badParmStr
-             2DC               2DC  substStr
+             1E4               1E4  addSubst.msg
+             1FC               1FC  printSubst
+             215               215  printSubst.lp
+             250               250  printSubst.gotoNextCDS
+             25D               25D  exit
+             269               269  checkSwitchOk
+             27E               27E  ..@50._base
+             280               280  ..@51._ret
+             281               281  ..@50.a
+             286               286  ..@53._base
+             288               288  checkSwitchOk.bad
+             289               289  ..@54._ret
+             28A               28A  enterDOSCrit
+             293               293  ..@55._ret
+             294               294  exitDOSCrit
+             29D               29D  ..@56._ret
+             29E               29E  skipDelims
+             2A9               2A9  ..@57._ret
+             2AA               2AA  findDelimOrCR
+             2B6               2B6  findDelimOrCR.exit
+             2B9               2B9  ..@58._ret
+             2BA               2BA  isALDelim
+             2BC               2BC  ..@60._base
+             2C0               2C0  ..@62._base
+             2C4               2C4  ..@64._base
+             2C8               2C8  ..@66._base
+             2CC               2CC  ..@67._ret
+             2CD               2CD  badVerStr
+             2E0               2E0  crlf
+             2E3               2E3  badParmStr
+             304               304  substStr
 
 ---- Section transient --------------------------------------------------------
 
 Real              Virtual           Name
-             2E8               2E8  pSysvars
-             2F0               2F0  pVar1
-             2F8               2F8  pVar2
-             468               468  endOfAlloc
+             310               310  pSysvars
+             318               318  pVar1
+             320               320  pVar2
+             490               490  endOfAlloc
 
