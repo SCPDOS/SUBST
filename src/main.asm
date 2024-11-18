@@ -85,7 +85,7 @@ delSubst:
     cmovne rdi, rsi     ;Make rdi point to the drive letter!
 ;rdi points to the drive letter in cmdline. Check it is legit.
     mov al, byte [rdi + 2]
-    call isALDelim
+    call isALDelimOrCR  ;Ensure the string length is 2!
     jne badParmExit
     cmp byte [rdi + 1], ":"
     jne badParmExit
@@ -161,13 +161,137 @@ addSubst:
 ;Drive1 can be valid, be cannot be a subst, join or net drive!
 ;
     mov rsi, qword [pVar1]
-    xor ecx, ecx
+    call findDelimOrCR
+    mov byte [rsi], 0   ;Null terminate var1
+    mov rsi, qword [pVar2]
+    call findDelimOrCR
+    mov byte [rsi], 0   ;Null terminate var2
 
-    lea rdx, .msg
-    mov eax, 0900h
+    xor ebp, ebp        ;Use rbp as the ptr to the drive spec string
+
+    mov rsi, qword [pVar1]  ;Check if var1 is drive specification
+    cmp word [rsi + 1], ":" ;Is pVar1 a drive specification?
+    cmove rbp, rsi  ;Move the ptr to the drive specifier into rbp
+
+    mov rsi, qword [pVar2]  ;Check if var2 is drive specification
+    cmp word [rsi + 1], ":" ;Is pVar2 a drive specification?
+    jne .gotDrvSpec
+    test rbp, rbp   ;rbp must be null, else two drives were specified. Error!
+    jnz badParmExit
+    mov rbp, rsi    ;Set rbp to point to the drive
+.gotDrvSpec:
+;Come here with rbp pointing to the new subst drive spec. 
+    movzx eax, byte [rbp]
+    push rax
+    mov eax, 1213h  ;UC the char in al
+    int 2Fh
+    sub al, "A"     ;Turn into a 0 based drive number
+    mov byte [destDrv], al
+    pop rax
+;Make rsi point to the other argument!
+    mov rsi, qword [pVar1]
+    mov rdi, qword [pVar2]
+    cmp rbp, rsi  ;if rbp -> var1...  
+    cmove rsi, rdi  ;... make rsi -> var2. Else, rsi -> var1
+;rsi -> ASCIIZ path. Must check it is a legit path.
+    lea rdi, pathBuffer
+    movzx eax, dword [rsi]   
+    xor al, al  ;Zero the first byte
+    cmp eax, 005C3A00h  ;<NUL>:\<NUL>
+    je .root
+    cmp eax, 002F3A00h  ;<NUL>:/<NUL>
+    jne .notRoot
+.root:
+;Skip using truename for mounting a root dir on another drive :)
+    lodsb   ;Get the drive letter
+    push rax
+    mov eax, 1213h  ;UC the drive letter
+    int 2Fh
+    stosb   ;Store it!
+    pop rax
+    movsw   ;Copy the rest of the string
+    movsb
+    jmp short .checks
+.notRoot:
+    mov eax, 6000h  ;Use truename to get the real path provided
     int 21h
-    int 20h
-.msg: db "UNIMPLEMENTED EXCEPTION$"
+.checks:
+    movzx eax, byte [rdi]   ;This is already uppercased by truename
+    sub al, "A"             ;Turn into a 0 based drive number
+    mov byte [srcDrv], al
+    cmp byte [destDrv], al
+    jne .notEqual
+    ;HERE ERROR! CANNOT SUBST A DRIVE ONTO ITSELF!
+.notEqual:
+;CHECK CHECK CHECK CHECK
+;Check that the directory we are swapping to exists and is a (SUB)DIR:)
+;CHECK CHECK CHECK CHECK
+    mov eax, 1900h  ;Get current drive
+    int 21h
+    cmp al, byte [destDrv]
+    jne .notCurrent
+    ;HERE ERROR! CANNOT SUBST OVER CURRENT DRIVE!
+.notCurrent:
+    call enterDOSCrit
+    mov rbx, qword [pSysvars]   
+    movzx eax, byte [rbx + sysVars.lastdrvNum]
+    cmp al, byte [srcDrv]
+    jnb .srcDrvNumOk
+    ;HERE ERROR! SRC DRIVE REQUESTED PAST THE LENGTH OF CDS ARRAY!
+.srcDrvNumOk:
+    cmp al, byte [destDrv]
+    jnb .destDrvNumOk
+    ;HERE ERROR! SUBST DRIVE REQUESTED PAST THE LENGTH OF CDS ARRAY!
+.destDrvNumOk:
+;Get the CDS for the destination. Check it is valid!
+    movzx ecx, byte [srcDrv]
+    call .getCds
+    test byte [rdi + cds.wFlags], cdsValidDrive
+    jnz .srcDrvValid
+    ;HERE ERROR! SPECIFIED HOST DRIVE NOT VALID (Should never happen?)
+.srcDrvValid:
+;Check host drive CDS is not NET, SUBST or JOIN!
+    test byte [rdi + cds.wFlags], cdsJoinDrive | cdsSubstDrive | cdsRedirDrive
+    jz .srcDrvOk
+    ;HERE ERROR! SPECIFIED HOST DRIVE ALREADY A SUBST/JOIN/REDIR DRIVE!
+.srcDrvOk:
+;Get the CDS for the source. If it is NET, SUBST or JOIN, fail!
+    mov rsi, rdi    ;Save the source cds pointer in rsi
+    movzx ecx, byte [destDrv]
+    call .getCds
+    test byte [rdi + cds.wFlags], cdsJoinDrive | cdsSubstDrive | cdsRedirDrive
+    jz .destDrvOk
+    ;HERE ERROR! SPECIFIED SUBST DRIVE IF ALREADY A SUBST/JOIN/REDIR DRIVE!
+.destDrvOk:
+    mov rbp, qword [rsi + cds.qDPBPtr]
+    mov qword [rdi + cds.qDPBPtr], rbp
+    mov dword [rdi + cds.dStartCluster], 0  ;Setup to root dir
+    mov word [rdi + cds.wBackslashOffset], 2
+    lea rsi, buffer
+    mov eax, 1212h  ;strlen on buffer in rsi preserving rsi
+    int 2Fh         ;Get the strlen in ecx
+    mov rdx, rsi
+    push rcx
+    push rdi
+    rep movsb       ;Copy the path over
+    pop rdi
+    pop rcx
+
+    mov word [rdi + cds.wFlags], cdsValidDrive | cdsSubstDrive  ;Setup flags
+    mov eax, 3B00h  ;CHDIR for this drive (to get the cluster value)
+    int 21h
+
+
+.getCds:
+;Input: ecx = [byte] 0-based drive number
+;       rbx -> sysVars
+;Output: rdi -> CDS for drive
+    lea rdi, qword [rbx + sysVars.cdsHeadPtr]   ;Point rdi to cds array
+    mov eax, cds_size
+    mul ecx
+    add rdi, rax    ;rdi now points to the right CDS
+    return
+
 
 printSubst:
     call enterDOSCrit   ;Ensure the CDS size and ptr doesnt change
@@ -254,16 +378,16 @@ skipDelims:
     return
 
 findDelimOrCR:
-;Point rsi to the first delim or cmdtail terminator
+;Point rsi to the first delim or cmdtail terminator, loads al with value
     lodsb
-    cmp al, CR
-    je .exit
-    call isALDelim
-    jnz findDelimOrCR
-.exit:
-    dec rsi
+    call isALDelimOrCR
+    jz findDelimOrCR
+    dec rsi ;Point back to the delim or CR char
     return
 
+isALDelimOrCR:
+    cmp al, CR
+    rete
 isALDelim:
     cmp al, SPC
     rete
