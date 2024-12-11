@@ -17,14 +17,16 @@ badPrintExit:
     mov eax, 4CFFh
     int 21h
 okVersion:
-    lea rsp, endOfAlloc   ;Move RSP to our internal stack
 ;Now we init the BSS to 0.
-    lea rdi, inCDS
+    lea rdi, bssStart
     xor eax, eax
     mov ecx, bssLen
     rep stosb
 ;Now let us resize ourselves so as to take up as little memory as possible
-    mov ebx, endOfAlloc
+    lea rbx, endOfAlloc ;Number of bytes of the allocation
+    sub rbx, r8
+    add ebx, 0Fh        ;Round up
+    shr ebx, 4          ;Turn into number of paragraphs
     mov eax, 4A00h
     int 21h ;If this fails, we still proceed as we are just being polite!
 ;Now get the sysvars pointer and save it in var.
@@ -69,7 +71,7 @@ endParse:
     inc ecx
 .g2:
     mov rsi, qword [pVar2]
-    cmp byte [rdi], dl
+    cmp byte [rsi], dl
     jne .switchDone
     test ecx, ecx   ;Var2 can be /D ONLY IF Var1 was not /D
     jnz badParmExit
@@ -109,18 +111,18 @@ delSubst:
 ; in our system (i.e. does such a drive entry exist in the CDS array)
     call enterDOSCrit   ;Enter crit, Exit in the exit routine!
     mov rbx, qword [pSysvars]   
-    movzx eax, byte [rbx + sysVars.lastdrvNum]
-    cmp cl, al  ;If drive specified is past end of CDS array, error!
-    ja .error
+;If drive specified to remove is past end of CDS array, error!
+    cmp byte [rbx + sysVars.lastdrvNum], cl
+    jbe .error
 ;Point rdi to the cds we are adjusting.
-    lea rdi, qword [rbx + sysVars.cdsHeadPtr]   ;Point rdi to cds array
+    mov rdi, qword [rbx + sysVars.cdsHeadPtr]   ;Point rdi to cds array
     mov eax, cds_size
     mul ecx
     add ecx, "A"    ;Turn offset back into a UC drive letter!
     add rdi, rax    ;rdi now points to the right CDS
 ;Check the cds we have chosen is really a subst drive
     test word [rdi + cds.wFlags], cdsSubstDrive
-    jne .error      ;If this CDS is not a subst drive, error!
+    jz .error      ;If this CDS is not a subst drive, error!
 ;Start editing the CDS back to it's default state
     mov byte [rdi], cl  ;Place the drive letter...
     mov word [rdi + 2], "\"   ;... and root backslash with null terminator!
@@ -215,14 +217,13 @@ addSubst:
     mov ah, ":"
     stosw   ;Store drive letter 
     xor eax, eax
-    lodsb   ;Get the first char of the path now...
-    dec rsi ;... and point back at it
-    push rax
-    mov eax, 1204h  ;Check if al is pathsep (and normalise if so)
-    int 2Fh
-    pop rbx ;Rejiggle stack
-    jz .pathSepFnd
-    mov al, "\" ;No pathsep, relative path given
+    lodsb   ;Get the first char of the path now and adv char ptr
+    cmp al, "\"
+    je .pathSepFnd
+    cmp al, "/"
+    mov al, "\"     ;No pathsep (relpath) or unix pathsep given
+    je .pathSepFnd
+    dec rsi         ;Return the source ptr to the first char again!
     stosb           ;Store the pathsep and adv rdi
     push rsi        ;Save the source pointer
     mov rsi, rdi    ;Store the rest of the path here
@@ -231,8 +232,10 @@ addSubst:
     pop rsi         ;Get back the pointer to the source in rsi
     xor eax, eax
     mov ecx, -1
-    rep scasb       ;Move rdi past the terminating null
+    repne scasb     ;Move rdi past the terminating null
     dec rdi         ;And point back to it
+    cmp byte [rdi - 1], "\" ;Skip adding extra pathsep if one present (rt only)
+    je .cplp
     mov al, "\"
 .pathSepFnd:
     stosb           ;Store the normalised pathsep
@@ -242,6 +245,15 @@ addSubst:
     stosb
     test al, al
     jnz .cplp
+;Now we normalise the CDS string and check it is of len leq 67
+    lea rsi, inCDS
+    mov rdi, rsi
+    mov eax, 1211h  ;Normalise string (UC and swap slashes.)
+    int 2Fh
+    mov eax, 1212h  ;Strlen (including terminating null)
+    int 2Fh
+    cmp ecx, 67
+    ja badParmExit
 ;Now the CDS string is setup :) 
 ;We now enter the critical section and 
 ; check the CDS string is a path to a directory!
@@ -273,13 +285,13 @@ addSubst:
     mov rbx, qword [pSysvars]
     movzx ecx, byte [destDrv]
     cmp byte [rbx + sysVars.lastdrvNum], cl
-    ja .destOk1
+    ja .destOk1 ;Has to be above zero as cl is 0 based :)
     ;ERROR: DRIVE PAST THE LAST DRIVE VALUE!
     jmp .inDOSBadExit
 .destOk1:
     call .getCds    ;Get the CDS ptr for the destination in rdi
     test word [rdi + cds.wFlags], cdsValidDrive
-    jnz .destOk2
+    jz .destOk2
     ;ERROR: SPECIFIED CDS ENTRY IS NOT A VALID CDS!
     jmp .inDOSBadExit
 .destOk2:
@@ -291,7 +303,7 @@ addSubst:
 ;Now we build the subst CDS.
     mov rbp, rdi    ;Save the destination cds pointer in rbp
     movzx ecx, byte [srcDrv]    
-    call .getCDS    ;Get source cds in rdi
+    call .getCds    ;Get source cds in rdi
     mov word [inCDS + cds.wFlags], cdsValidDrive | cdsSubstDrive
     mov rsi, qword [rdi + cds.qDPBPtr]
     mov qword [inCDS + cds.qDPBPtr], rsi
@@ -322,7 +334,7 @@ addSubst:
 ;Input: ecx = [byte] 0-based drive number
 ;       rbx -> sysVars
 ;Output: rdi -> CDS for drive
-    lea rdi, qword [rbx + sysVars.cdsHeadPtr]   ;Point rdi to cds array
+    mov rdi, qword [rbx + sysVars.cdsHeadPtr]   ;Point rdi to cds array
     mov eax, cds_size
     mul ecx
     add rdi, rax    ;rdi now points to the right CDS
@@ -332,7 +344,7 @@ addSubst:
 printSubst:
     call enterDOSCrit   ;Ensure the CDS size and ptr doesnt change
     mov rbx, qword [pSysvars]
-    lea rdi, qword [rbx + sysVars.cdsHeadPtr]
+    mov rdi, qword [rbx + sysVars.cdsHeadPtr]
     movzx ecx, byte [rbx + sysVars.lastdrvNum]  ;Get # of CDS's
     mov ebx, "A"    
 .lp:
@@ -417,7 +429,7 @@ findDelimOrCR:
 ;Point rsi to the first delim or cmdtail terminator, loads al with value
     lodsb
     call isALDelimOrCR
-    jz findDelimOrCR
+    jnz findDelimOrCR
     dec rsi ;Point back to the delim or CR char
     return
 

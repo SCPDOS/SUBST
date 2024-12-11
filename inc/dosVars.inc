@@ -17,6 +17,7 @@ struc sysVars
     .numJoinDrv  db ?    ;Number of Joined Drives
 endstruc
 
+ioReqPkt_size equ 2Ah
 
 struc sda
     .critErrFlag db ?  ;Critical error flag, set on entry to Int 24h x
@@ -73,21 +74,4 @@ struc sda
     .skipDisk    db ?  ;Set => Read Disk, Clear => Skip checking on disk
     .dosffblock  db ffBlock_size dup (?)  ;FF block (fullsize unlike DOS)
     .curDirCopy  db fatDirEntry_size dup (?)  ;Dir copy
-endstruc
-
-struc fatDirEntry
-
-    .name       db 11 dup (?) ;8.3 File Name w/o fullstop
-    .attribute  db ?  ;Usual attributes
-    .ntRes      db ?  ;Reserved 0
-    .crtTimeT   db ?  ;Count of tenths of a second of file creation time <=199
-    .crtTime    dw ?  ;Creation time, granularity of 2 seconds
-    .crtDate    dw ?  ;Creation date
-    .lastAccDat dw ?  ;Last Read/Write date, not 100% supported (consider later)
-    .fstClusHi  dw ?  ;Hi word of 1st data cluster for file/dir, 0 on FAT12/16
-    .wrtTime    dw ?  ;Last modification (write) time
-    .wrtDate    dw ?  ;Last modification (write) date
-    .fstClusLo  dw ?  ;Lo word of 1st data cluster for file/dir
-    .fileSize   dd ?  ;32-bit quantity with size of file described by entry
-
 endstruc
