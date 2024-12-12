@@ -52,14 +52,19 @@ parseCmdLine:
     call findDelimOrCR
     cmp al, CR  ;The second arg shouldve been the last arg
     je endParse
+badPrmsExit:
+;Too many parameters and/or badly formatted cmdline error
+    lea rdx, badPrmsStr
+    jmp badPrintExit
 badParmExit:
+;Bad but valid parameter passed in
     lea rdx, badParmStr
     jmp badPrintExit
 endParse:
     test ecx, ecx
     jz printSubst   ;If no arguments found, print the substs!
     cmp ecx, 1      
-    je badParmExit  ;Cannot have just 1 argument on the cmdline
+    je badPrmsExit  ;Cannot have just 1 argument on the cmdline
     mov eax, 3700h  ;Get switchchar in dl
     int 21h
     xor ecx, ecx    ;Use as cntr (1 or 2) to indicate which var has ptr to /D
@@ -67,16 +72,16 @@ endParse:
     cmp byte [rsi], dl
     jne .g2
     call checkSwitchOk  ;Now check rsi points to a bona fide /D 
-    jc badParmExit
+    jc badPrmsExit
     inc ecx
 .g2:
     mov rsi, qword [pVar2]
     cmp byte [rsi], dl
     jne .switchDone
     test ecx, ecx   ;Var2 can be /D ONLY IF Var1 was not /D
-    jnz badParmExit
+    jnz badPrmsExit
     call checkSwitchOk  ;Now check rsi points to a bona fide /D 
-    jc badParmExit
+    jc badPrmsExit
     mov ecx, 2      ;Else, indicate var2 has the /D flag!
 .switchDone:
     test ecx, ecx   ;If ecx is zero, then we are adding a subst.
@@ -90,9 +95,9 @@ delSubst:
 ;rdi points to the drive letter in cmdline. Check it is legit.
     mov al, byte [rdi + 2]
     call isALDelimOrCR  ;Ensure the string length is 2!
-    jne badParmExit
+    jne badPrmsExit
     cmp byte [rdi + 1], ":"
-    jne badParmExit
+    jne badPrmsExit
 ;Here the char is legit! Now UC it and use it as offset into CDS
 ; to deactivate it!
     movzx eax, byte [rdi]
@@ -181,7 +186,7 @@ addSubst:
     cmp word [rsi + 1], ":" ;Is pVar2 a drive specification?
     jne .gotDrvSpec
     test rbp, rbp   ;rbp must be null, else two drives were specified. Error!
-    jnz badParmExit
+    jnz badParmExit ;Cmdline valid but invalid data passed!
     mov rbp, rsi    ;Set rbp to point to the drive
 .gotDrvSpec:
 ;Come here with rbp pointing to the new subst drive spec. 
@@ -201,7 +206,7 @@ addSubst:
     lea rdi, qword [inCDS + cds.sCurrentPath]
     mov eax, 121Ah
     int 2Fh
-    jc badParmExit
+    jc badParmExit  ;Bad drive selected if CF=CY
     test al, al
     jnz .notDefault
     mov eax, 1900h
@@ -268,9 +273,9 @@ addSubst:
     mov ecx, 10h    ;Subdir flag
     int 21h
     jnc .dirFnd
-.inDOSBadExit:
+    lea rdx, badPathStr ;Bad path passed for substing
     call exitDOSCrit
-    jmp badParmExit
+    jmp badPrintExit
 .dirFnd:
     mov eax, 5D06h  ;Get SDA ptr in rsi
     int 21h
@@ -285,25 +290,30 @@ addSubst:
     mov rbx, qword [pSysvars]
     movzx ecx, byte [destDrv]
     cmp byte [rbx + sysVars.lastdrvNum], cl
-    ja .destOk1 ;Has to be above zero as cl is 0 based :)
+    ja .destNumOk ;Has to be above zero as cl is 0 based :)
     ;ERROR: DRIVE PAST THE LAST DRIVE VALUE!
-    jmp .inDOSBadExit
-.destOk1:
+.inDOSBadExit:
+    call exitDOSCrit
+    jmp badParmExit
+.destNumOk:
     call .getCds    ;Get the CDS ptr for the destination in rdi
-    test word [rdi + cds.wFlags], cdsValidDrive
-    jz .destOk2
-    ;ERROR: SPECIFIED CDS ENTRY IS NOT A VALID CDS!
-    jmp .inDOSBadExit
-.destOk2:
+    ;test word [rdi + cds.wFlags], cdsValidDrive
+    ;DO NOT CHECK VALIDITY AS WE CAN OVERWRITE A VALID LOCAL DRV
+    ;jnz .inDOSBadExit
     test word [rdi + cds.wFlags], cdsSubstDrive | cdsJoinDrive | cdsRedirDrive
-    jz .destOk3
-    ;ERROR: SPECIFIED CDS ENTRY IS ALREADY IN USE FOR REDIR!
-    jmp .inDOSBadExit
-.destOk3:
+    jz .destNotNet   
+;ERROR: SPECIFIED CDS ENTRY ALREADY IN USE FOR REDIR!
+.inDOSBadNetExit:
+    lea rdx, badNetStr
+    call exitDOSCrit
+    jmp badPrintExit
+.destNotNet:
 ;Now we build the subst CDS.
     mov rbp, rdi    ;Save the destination cds pointer in rbp
     movzx ecx, byte [srcDrv]    
     call .getCds    ;Get source cds in rdi
+    test word [rdi + cds.wFlags], cdsSubstDrive | cdsJoinDrive | cdsRedirDrive
+    jnz .inDOSBadNetExit
     mov word [inCDS + cds.wFlags], cdsValidDrive | cdsSubstDrive
     mov rsi, qword [rdi + cds.qDPBPtr]
     mov qword [inCDS + cds.qDPBPtr], rsi

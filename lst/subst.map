@@ -11,15 +11,15 @@ Output file:  ./bin/SUBST.COM
 -- Sections (summary) ---------------------------------------------------------
 
 Vstart            Start             Stop              Length    Class     Name
-               0                 0               4F9  000004F9  progbits  .text
-             500               500               702  00000202  nobits    transient
+               0                 0               562  00000562  progbits  .text
+             568               568               76A  00000202  nobits    transient
 
 -- Sections (detailed) --------------------------------------------------------
 
 ---- Section .text ------------------------------------------------------------
 
 class:     progbits
-length:                 4F9
+length:                 562
 start:                    0
 align:     not defined
 follows:   not defined
@@ -31,10 +31,10 @@ vfollows:  not defined
 
 class:     nobits
 length:                 202
-start:                  500
+start:                  568
 align:                    8
 follows:   not defined
-vstart:                 500
+vstart:                 568
 valign:                   8
 vfollows:  .text
 
@@ -523,70 +523,74 @@ Real              Virtual           Name
               21                21  badPrintExit
               2F                2F  okVersion
               67                67  parseCmdLine
-              A2                A2  badParmExit
-              AE                AE  endParse
-              DB                DB  endParse.g2
-              F6                F6  endParse.switchDone
-              FE                FE  delSubst
-             1A2               1A2  delSubst.lp
-             1B4               1B4  delSubst.exit
-             1B9               1B9  delSubst.dpbFnd
-             1C5               1C5  delSubst.error
-             1CF               1CF  addSubst
-             21B               21B  addSubst.gotDrvSpec
-             266               266  addSubst.notDefault
-             2B3               2B3  addSubst.pathSepFnd
-             2B4               2B4  addSubst.cplp
-             304               304  addSubst.inDOSBadExit
-             30E               30E  addSubst.dirFnd
-             32E               32E  addSubst.rtDir
-             346               346  addSubst.destOk1
-             358               358  addSubst.destOk2
-             365               365  addSubst.destOk3
-             3BE               3BE  addSubst.notTrailing
-             3DB               3DB  addSubst.getCds
-             3E9               3E9  ..@55._ret
-             3EA               3EA  printSubst
-             403               403  printSubst.lp
-             43E               43E  printSubst.gotoNextCDS
-             44B               44B  exit
-             457               457  checkSwitchOk
-             46C               46C  ..@57._base
-             46E               46E  ..@58._ret
-             46F               46F  ..@57.a
-             474               474  ..@60._base
-             476               476  checkSwitchOk.bad
-             477               477  ..@61._ret
-             478               478  enterDOSCrit
-             481               481  ..@62._ret
-             482               482  exitDOSCrit
-             48B               48B  ..@63._ret
-             48C               48C  skipDelims
-             497               497  ..@64._ret
-             498               498  findDelimOrCR
-             4A3               4A3  ..@65._ret
-             4A4               4A4  isALDelimOrCR
-             4A6               4A6  ..@67._base
-             4A8               4A8  isALDelim
-             4AA               4AA  ..@69._base
-             4AE               4AE  ..@71._base
-             4B2               4B2  ..@73._base
-             4B6               4B6  ..@75._base
-             4BA               4BA  ..@76._ret
-             4BB               4BB  badVerStr
-             4CE               4CE  crlf
-             4D1               4D1  badParmStr
-             4F2               4F2  substStr
+              A2                A2  badPrmsExit
+              AE                AE  badParmExit
+              BA                BA  endParse
+              E7                E7  endParse.g2
+             102               102  endParse.switchDone
+             10A               10A  delSubst
+             1B2               1B2  delSubst.lp
+             1C4               1C4  delSubst.exit
+             1C9               1C9  delSubst.dpbFnd
+             1D5               1D5  delSubst.error
+             1DF               1DF  addSubst
+             22B               22B  addSubst.gotDrvSpec
+             276               276  addSubst.notDefault
+             2C3               2C3  addSubst.pathSepFnd
+             2C4               2C4  addSubst.cplp
+             325               325  addSubst.dirFnd
+             345               345  addSubst.rtDir
+             358               358  addSubst.inDOSBadExit
+             362               362  addSubst.destNumOk
+             36F               36F  addSubst.inDOSBadNetExit
+             380               380  addSubst.destNotNet
+             3E1               3E1  addSubst.notTrailing
+             3FE               3FE  addSubst.getCds
+             40C               40C  ..@55._ret
+             40D               40D  printSubst
+             426               426  printSubst.lp
+             461               461  printSubst.gotoNextCDS
+             46E               46E  exit
+             47A               47A  checkSwitchOk
+             48F               48F  ..@57._base
+             491               491  ..@58._ret
+             492               492  ..@57.a
+             497               497  ..@60._base
+             499               499  checkSwitchOk.bad
+             49A               49A  ..@61._ret
+             49B               49B  enterDOSCrit
+             4A4               4A4  ..@62._ret
+             4A5               4A5  exitDOSCrit
+             4AE               4AE  ..@63._ret
+             4AF               4AF  skipDelims
+             4BA               4BA  ..@64._ret
+             4BB               4BB  findDelimOrCR
+             4C6               4C6  ..@65._ret
+             4C7               4C7  isALDelimOrCR
+             4C9               4C9  ..@67._base
+             4CB               4CB  isALDelim
+             4CD               4CD  ..@69._base
+             4D1               4D1  ..@71._base
+             4D5               4D5  ..@73._base
+             4D9               4D9  ..@75._base
+             4DD               4DD  ..@76._ret
+             4DE               4DE  badNetStr
+             4FD               4FD  badVerStr
+             512               512  crlf
+             515               515  badPrmsStr
+             536               536  badParmStr
+             54A               54A  badPathStr
+             55B               55B  substStr
 
 ---- Section transient --------------------------------------------------------
 
 Real              Virtual           Name
-             500               500  bssStart
-             500               500  pSysvars
-             508               508  pVar1
-             510               510  pVar2
-             518               518  srcDrv
-             519               519  destDrv
-             51A               51A  inCDS
-             702               702  endOfAlloc
+             568               568  bssStart
+             568               568  pSysvars
+             570               570  pVar1
+             578               578  pVar2
+             580               580  srcDrv
+             581               581  destDrv
+             582               582  inCDS
+             76A               76A  endOfAlloc
 
