@@ -244,10 +244,15 @@ addSubst:
     mov al, "\"
 .pathSepFnd:
     stosb           ;Store the normalised pathsep
-;Now copy the path specified by rsi to rdi. rsi is null terminated string
+;Now copy the path specified by rsi to rdi. rsi is null terminated string.
+;If a wildcard is found, fail the subst (cannot pass wildcards into subst)
 .cplp:
     lodsb
     stosb
+    cmp al, "?"
+    je badParmExit
+    cmp al, "*"
+    je badParmExit
     test al, al
     jnz .cplp
 ;Now we normalise the CDS string and check it is of len leq 67
@@ -272,11 +277,16 @@ addSubst:
     mov eax, 4E00h
     mov ecx, 10h    ;Subdir flag
     int 21h
-    jnc .dirFnd
+    jnc .fnd
+.substNotDir:
     lea rdx, badPathStr ;Bad path passed for substing
     call exitDOSCrit
     jmp badPrintExit
-.dirFnd:
+.fnd:
+;Something found, check it is a directory, not a file!
+    cmp byte [r8 + 80h + ffBlock.attribFnd], 10h  ;Subdir flag
+    jne .substNotDir
+;Subdir found, get sda ptr to get cur dir info w/o using FCB functions.
     mov eax, 5D06h  ;Get SDA ptr in rsi
     int 21h
     movzx edx, word [rsi + sda.curDirCopy + fatDirEntry.fstClusLo]
@@ -311,6 +321,8 @@ addSubst:
 ;Now we build the subst CDS.
     mov rbp, rdi    ;Save the destination cds pointer in rbp
     movzx ecx, byte [srcDrv]    
+    cmp byte [rbx + sysVars.lastdrvNum], cl ;Ensure src drive in range too
+    jbe .inDOSBadExit
     call .getCds    ;Get source cds in rdi
     test word [rdi + cds.wFlags], cdsSubstDrive | cdsJoinDrive | cdsRedirDrive
     jnz .inDOSBadNetExit
@@ -367,11 +379,13 @@ printSubst:
     int 21h
 ;Print the current path of the cds upto the backslash offset
     push rbx
+    push rcx
     movzx ecx, word [rdi + cds.wBackslashOffset]
     lea rdx, qword [rdi + cds.sCurrentPath]
     mov ebx, 1          ;Print to STDOUT
     mov eax, 4000h
     int 21h
+    pop rcx
     pop rbx
 ;Print a CRLF
     lea rdx, crlf
