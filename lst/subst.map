@@ -11,15 +11,15 @@ Output file:  ./bin/SUBST.COM
 -- Sections (summary) ---------------------------------------------------------
 
 Vstart            Start             Stop              Length    Class     Name
-               0                 0               583  00000583  progbits  .text
-             588               588               78A  00000202  nobits    transient
+               0                 0               5AC  000005AC  progbits  .text
+             5B0               5B0               7B2  00000202  nobits    transient
 
 -- Sections (detailed) --------------------------------------------------------
 
 ---- Section .text ------------------------------------------------------------
 
 class:     progbits
-length:                 583
+length:                 5AC
 start:                    0
 align:     not defined
 follows:   not defined
@@ -31,10 +31,10 @@ vfollows:  not defined
 
 class:     nobits
 length:                 202
-start:                  588
+start:                  5B0
 align:                    8
 follows:   not defined
-vstart:                 588
+vstart:                 5B0
 valign:                   8
 vfollows:  .text
 
@@ -541,57 +541,59 @@ Real              Virtual           Name
              324               324  addSubst.substNotDir
              335               335  addSubst.fnd
              35F               35F  addSubst.rtDir
-             372               372  addSubst.inDOSBadExit
-             37C               37C  addSubst.destNumOk
-             389               389  addSubst.inDOSBadNetExit
-             39A               39A  addSubst.destNotNet
-             400               400  addSubst.notTrailing
-             41D               41D  addSubst.getCds
-             42B               42B  ..@55._ret
-             42C               42C  printSubst
-             445               445  printSubst.lp
-             482               482  printSubst.gotoNextCDS
-             48F               48F  exit
-             49B               49B  checkSwitchOk
-             4B0               4B0  ..@57._base
-             4B2               4B2  ..@58._ret
-             4B3               4B3  ..@57.a
-             4B8               4B8  ..@60._base
-             4BA               4BA  checkSwitchOk.bad
-             4BB               4BB  ..@61._ret
-             4BC               4BC  enterDOSCrit
-             4C5               4C5  ..@62._ret
-             4C6               4C6  exitDOSCrit
-             4CF               4CF  ..@63._ret
-             4D0               4D0  skipDelims
-             4DB               4DB  ..@64._ret
-             4DC               4DC  findDelimOrCR
-             4E7               4E7  ..@65._ret
-             4E8               4E8  isALDelimOrCR
-             4EA               4EA  ..@67._base
-             4EC               4EC  isALDelim
-             4EE               4EE  ..@69._base
-             4F2               4F2  ..@71._base
-             4F6               4F6  ..@73._base
-             4FA               4FA  ..@75._base
-             4FE               4FE  ..@76._ret
-             4FF               4FF  badNetStr
-             51E               51E  badVerStr
-             533               533  crlf
-             536               536  badPrmsStr
-             557               557  badParmStr
-             56B               56B  badPathStr
-             57C               57C  substStr
+             372               372  addSubst.joinTest
+             38A               38A  addSubst.joinNeq
+             39B               39B  addSubst.inDOSBadExit
+             3A5               3A5  addSubst.destNumOk
+             3B2               3B2  addSubst.inDOSBadNetExit
+             3C3               3C3  addSubst.destNotNet
+             429               429  addSubst.notTrailing
+             446               446  addSubst.getCds
+             454               454  ..@55._ret
+             455               455  printSubst
+             46E               46E  printSubst.lp
+             4AB               4AB  printSubst.gotoNextCDS
+             4B8               4B8  exit
+             4C4               4C4  checkSwitchOk
+             4D9               4D9  ..@57._base
+             4DB               4DB  ..@58._ret
+             4DC               4DC  ..@57.a
+             4E1               4E1  ..@60._base
+             4E3               4E3  checkSwitchOk.bad
+             4E4               4E4  ..@61._ret
+             4E5               4E5  enterDOSCrit
+             4EE               4EE  ..@62._ret
+             4EF               4EF  exitDOSCrit
+             4F8               4F8  ..@63._ret
+             4F9               4F9  skipDelims
+             504               504  ..@64._ret
+             505               505  findDelimOrCR
+             510               510  ..@65._ret
+             511               511  isALDelimOrCR
+             513               513  ..@67._base
+             515               515  isALDelim
+             517               517  ..@69._base
+             51B               51B  ..@71._base
+             51F               51F  ..@73._base
+             523               523  ..@75._base
+             527               527  ..@76._ret
+             528               528  badNetStr
+             547               547  badVerStr
+             55C               55C  crlf
+             55F               55F  badPrmsStr
+             580               580  badParmStr
+             594               594  badPathStr
+             5A5               5A5  substStr
 
 ---- Section transient --------------------------------------------------------
 
 Real              Virtual           Name
-             588               588  bssStart
-             588               588  pSysvars
-             590               590  pVar1
-             598               598  pVar2
-             5A0               5A0  srcDrv
-             5A1               5A1  destDrv
-             5A2               5A2  inCDS
-             78A               78A  endOfAlloc
+             5B0               5B0  bssStart
+             5B0               5B0  pSysvars
+             5B8               5B8  pVar1
+             5C0               5C0  pVar2
+             5C8               5C8  srcDrv
+             5C9               5C9  destDrv
+             5CA               5CA  inCDS
+             7B2               7B2  endOfAlloc
 

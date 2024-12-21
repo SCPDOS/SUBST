@@ -296,8 +296,25 @@ addSubst:
     mov dword [inCDS + cds.dStartCluster], eax  ;Replace with real start clust
 .rtDir:
 ;The path provided is a valid directory. Start cluster in CDS (0 if root dir)
-;Now check the selected destination CDS is valid!
     mov rbx, qword [pSysvars]
+;!!!! CHECK THIS PATH IS NOT A JOIN PATH !!!!
+    push rbx
+    movzx ecx, byte [rbx + sysVars.lastdrvNum]
+    lea rsi, qword [inCDS + cds.sCurrentPath]
+.joinTest:
+    dec ecx
+    call .getCds    ;Get the ptr to the CDS here in rdi
+    mov eax, 121Eh  ;ASCII compare the strings. ZF=ZE if strings equal
+    int 2Fh
+    jnz .joinNeq
+    test word [rdi + cds.wFlags], cdsJoinDrive
+    jnz .inDOSBadNetExit
+.joinNeq:
+    test ecx, ecx   ;Once we test drive zero, exit
+    jnz .joinTest
+    pop rbx
+;!!!! CHECK THIS PATH IS NOT A JOIN PATH !!!!
+;Now check the selected destination CDS is valid!
     movzx ecx, byte [destDrv]
     cmp byte [rbx + sysVars.lastdrvNum], cl
     ja .destNumOk ;Has to be above zero as cl is 0 based :)
