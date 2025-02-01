@@ -16,7 +16,27 @@ badPrintExit:
     int 21h
     mov eax, 4CFFh
     int 21h
+testMplx:
+;Tests if either sesman or multi are installed.
+;Output: ZF=NZ: Either installed.
+;        ZF=ZY: Neither installed, proceed!
+    mov eax, 0900h
+    int 2Fh
+    test al, -1
+    retnz
+    mov eax, 0A00h
+    int 2Fh
+    test al, -1
+    return
 okVersion:
+;In later versions of SUBST, we use the CDS ptr of the parent
+; process. For now, we just exit error if we enter with either
+; sesman or multi installed.
+    call testMplx
+    jz clearBss
+    lea rdx, badMultStr
+    jmp short badPrintExit
+clearBss:
 ;Now we init the BSS to 0.
     lea rdi, bssStart
     xor eax, eax
@@ -114,7 +134,7 @@ delSubst:
     je badParmExit
 ;Check if the subst drive we want to deactivate is a valid drive
 ; in our system (i.e. does such a drive entry exist in the CDS array)
-    call enterDOSCrit   ;Enter crit, Exit in the exit routine!
+    ;call enterDOSCrit   ;Enter crit, Exit in the exit routine!
     mov rbx, qword [pSysvars]   
 ;If drive specified to remove is past end of CDS array, error!
     cmp byte [rbx + sysVars.lastdrvNum], cl
@@ -159,7 +179,7 @@ delSubst:
     jmp short .exit
 .error:
 ;Invalid drive specified!
-    call exitDOSCrit    ;Exit the critical section before exiting!!
+    ;call exitDOSCrit    ;Exit the critical section before exiting!!
     jmp badParmExit
     
 addSubst:
@@ -267,7 +287,7 @@ addSubst:
 ;Now the CDS string is setup :) 
 ;We now enter the critical section and 
 ; check the CDS string is a path to a directory!
-    call enterDOSCrit   ;Now enter DOS critical section
+    ;call enterDOSCrit   ;Now enter DOS critical section
 
     lea rdx, qword [inCDS + cds.sCurrentPath]
     mov eax, dword [rdx]
@@ -280,7 +300,7 @@ addSubst:
     jnc .fnd
 .substNotDir:
     lea rdx, badPathStr ;Bad path passed for substing
-    call exitDOSCrit
+    ;call exitDOSCrit
     jmp badPrintExit
 .fnd:
 ;Something found, check it is a directory, not a file!
@@ -320,7 +340,7 @@ addSubst:
     ja .destNumOk ;Has to be above zero as cl is 0 based :)
     ;ERROR: DRIVE PAST THE LAST DRIVE VALUE!
 .inDOSBadExit:
-    call exitDOSCrit
+    ;call exitDOSCrit
     jmp badParmExit
 .destNumOk:
     call .getCds    ;Get the CDS ptr for the destination in rdi
@@ -332,7 +352,7 @@ addSubst:
 ;ERROR: SPECIFIED CDS ENTRY ALREADY IN USE FOR REDIR!
 .inDOSBadNetExit:
     lea rdx, badNetStr
-    call exitDOSCrit
+    ;call exitDOSCrit
     jmp badPrintExit
 .destNotNet:
 ;Now we build the subst CDS.
@@ -381,7 +401,7 @@ addSubst:
 
 
 printSubst:
-    call enterDOSCrit   ;Ensure the CDS size and ptr doesnt change
+    ;call enterDOSCrit   ;Ensure the CDS size and ptr doesnt change
     mov rbx, qword [pSysvars]
     mov rdi, qword [rbx + sysVars.cdsHeadPtr]
     movzx ecx, byte [rbx + sysVars.lastdrvNum]  ;Get # of CDS's
@@ -414,7 +434,7 @@ printSubst:
     dec ecx
     jnz .lp
 exit:
-    call exitDOSCrit
+    ;call exitDOSCrit
     mov eax, 4C00h
     int 21h
 
@@ -443,19 +463,19 @@ checkSwitchOk:
     stc
     return
 
-enterDOSCrit:
-    push rax
-    mov eax, 8001h
-    int 2Ah
-    pop rax
-    return 
+;enterDOSCrit:
+;    push rax
+;    mov eax, 8001h
+;    int 2Ah
+;    pop rax
+;    return 
 
-exitDOSCrit:
-    push rax
-    mov eax, 8101h
-    int 2Ah
-    pop rax
-    return 
+;exitDOSCrit:
+;    push rax
+;    mov eax, 8101h
+;    int 2Ah
+;    pop rax
+;    return 
 
 skipDelims:
 ;Points rsi to the first non-delimiter char in a string, loads al with value
